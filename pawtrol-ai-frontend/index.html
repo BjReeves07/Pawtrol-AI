@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pawtrol AI - Animal Monitoring System</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header>
+        <h1>🐾 Pawtrol AI</h1>
+        <p>Intelligent Animal Monitoring System</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><button class="nav-btn active" data-view="dashboard">Dashboard</button></li>
+            <li><button class="nav-btn" data-view="animals">Animals</button></li>
+            <li><button class="nav-btn" data-view="monitor">Live Monitor</button></li>
+            <li><button class="nav-btn" data-view="logs">Behavior Logs</button></li>
+            <li><button class="nav-btn" data-view="upload">Upload Image</button></li>
+            <li><button class="nav-btn" data-view="summaries">Summaries</button></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <!-- Dashboard View -->
+        <div id="dashboard" class="view active">
+            <h2>Dashboard</h2>
+            
+            <div class="status-card">
+                <h3>Backend Connection</h3>
+                <p>
+                    <span class="status-indicator" id="statusIndicator"></span>
+                    <span id="statusText">Checking connection...</span>
+                </p>
+                <p id="animalList" style="margin-top: 0.5rem; color: #666;"></p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Animals</h3>
+                    <div class="value" id="totalAnimals">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Behaviors Detected Today</h3>
+                    <div class="value" id="behaviorsToday">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Alerts</h3>
+                    <div class="value" id="activeAlerts">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Images Analyzed</h3>
+                    <div class="value" id="imagesAnalyzed">0</div>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <h3>Recent Activity</h3>
+                <div class="summary-content" id="recentActivity">
+                    <p>No recent activity. Start monitoring animals to see behavior detection in action!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Animals View -->
+        <div id="animals" class="view">
+            <h2>Animal Management</h2>
+            <button class="btn btn-primary" style="margin: 1rem 0;">+ Add New Animal</button>
+            <div class="animal-grid" id="animalGrid">
+                <!-- Animals will be loaded here dynamically -->
+            </div>
+        </div>
+
+        <!-- Live Monitor View -->
+        <div id="monitor" class="view">
+            <h2>Live Camera Monitoring</h2>
+            <p style="margin-bottom: 1.5rem; color: #666;">Configure cameras to monitor animal behavior in real-time using OpenCV</p>
+            <div class="camera-grid">
+                <div class="camera-feed">
+                    <h3>Camera 1</h3>
+                    <div class="camera-placeholder">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        <p>Camera Feed - OpenCV Integration</p>
+                    </div>
+                    <button class="btn btn-primary" style="margin-top: 1rem; width: 100%;">Configure Camera</button>
+                </div>
+                <div class="camera-feed">
+                    <h3>Camera 2</h3>
+                    <div class="camera-placeholder">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        <p>Camera Feed - OpenCV Integration</p>
+                    </div>
+                    <button class="btn btn-primary" style="margin-top: 1rem; width: 100%;">Configure Camera</button>
+                </div>
+            </div>
+            <div class="summary-card" style="margin-top: 2rem;">
+                <h3>📝 Backend Integration Note</h3>
+                <div class="summary-content">
+                    <p><strong>For Backend Team:</strong> Implement camera feed streaming using OpenCV.</p>
+                    <p style="margin-top: 0.5rem;">Required endpoint: <code>GET /camera/stream/{cameraId}</code></p>
+                    <p style="margin-top: 0.5rem;">The frontend will display the video stream and receive real-time behavior alerts.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Behavior Logs View -->
+        <div id="logs" class="view">
+            <h2>Behavior Detection Logs</h2>
+            <p style="color: #666; margin-bottom: 1rem;">Real-time behavior detection powered by Gemini API</p>
+            <div class="log-container" id="logContainer">
+                <p style="color: #999; text-align: center; padding: 2rem;">No behavior logs yet. Upload images or start live monitoring to see detections here.</p>
+            </div>
+            <div class="summary-card" style="margin-top: 1rem;">
+                <h3>📝 Backend Integration Note</h3>
+                <div class="summary-content">
+                    <p><strong>For Backend Team:</strong> Create behavior logging system.</p>
+                    <p style="margin-top: 0.5rem;">Required endpoints:</p>
+                    <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                        <li><code>GET /behaviors</code> - Get all behavior logs</li>
+                        <li><code>GET /behaviors/today</code> - Get today's logs</li>
+                        <li><code>POST /behaviors</code> - Create new behavior log (from AI detection)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload View -->
+        <div id="upload" class="view">
+            <h2>Upload Animal Image for AI Analysis</h2>
+            <p style="color: #666; margin-bottom: 1rem;">Images analyzed using Gemini API for behavior detection</p>
+            <div class="upload-area">
+                <div class="drop-zone" id="dropZone">
+                    <svg style="width: 64px; height: 64px; margin-bottom: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    <h3>Drop image here or click to upload</h3>
+                    <p style="color: #999; margin-top: 0.5rem;">Supported formats: JPG, PNG, GIF</p>
+                    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                </div>
+                <img id="imagePreview" alt="Preview">
+                <div class="spinner" id="uploadSpinner"></div>
+                <div id="analysisResult" style="margin-top: 1.5rem;"></div>
+                <button class="btn btn-success" id="analyzeBtn" style="margin-top: 1rem; display: none;">Analyze Image with AI</button>
+            </div>
+            <div class="summary-card" style="margin-top: 1rem;">
+                <h3>📝 Backend Integration Note</h3>
+                <div class="summary-content">
+                    <p><strong>For Backend Team:</strong> Implement image upload and AI analysis.</p>
+                    <p style="margin-top: 0.5rem;">Required endpoint: <code>POST /upload</code></p>
+                    <p style="margin-top: 0.5rem;"><strong>Expected response format:</strong></p>
+                    <pre style="background: #f5f5f5; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem; overflow-x: auto;">
+{
+  "success": true,
+  "behavior": "Dog is pacing",
+  "duration": "30 seconds",
+  "confidence": 0.95,
+  "timestamp": "2025-10-20T10:30:00Z",
+  "details": "Detected restless behavior..."
+}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summaries View -->
+        <div id="summaries" class="view">
+            <h2>Daily Summaries & Reports</h2>
+            <p style="color: #666; margin-bottom: 1rem;">AI-generated summaries powered by GPT-3.5</p>
+            <div class="summary-card">
+                <h3>Today's Summary <span class="alert-badge info">Latest</span></h3>
+                <div class="summary-content" id="todaySummary">
+                    <p>No summary available yet. Summaries are generated automatically based on detected behaviors throughout the day using GPT-3.5 API.</p>
+                </div>
+            </div>
+            <div class="summary-card">
+                <h3>Alerts & Notifications</h3>
+                <div class="summary-content" id="alertsContent">
+                    <p>No unusual behaviors detected. System is monitoring normally.</p>
+                </div>
+            </div>
+            <div class="summary-card">
+                <h3>📝 Backend Integration Note</h3>
+                <div class="summary-content">
+                    <p><strong>For Backend Team:</strong> Implement GPT-3.5 summary generation.</p>
+                    <p style="margin-top: 0.5rem;">Required endpoints:</p>
+                    <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                        <li><code>GET /summary/daily</code> - Get today's AI-generated summary</li>
+                        <li><code>GET /alerts</code> - Get active alerts</li>
+                        <li><code>POST /summary/generate</code> - Manually trigger summary generation</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
