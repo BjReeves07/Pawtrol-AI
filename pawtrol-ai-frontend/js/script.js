@@ -381,3 +381,57 @@ if (typeof module !== 'undefined' && module.exports) {
         displayAnalysisResult
     };
 }
+// WEBCAM LIVE MONITORING
+
+const video = document.getElementById("video");
+const output = document.getElementById("output");
+
+async function startWebcam() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        video.play();
+        console.log("Webcam started");
+    } catch (err) {
+        console.error("Webcam error:", err);
+        output.innerText = "Failed to start webcam.";
+    }
+}
+
+// Convert current frame to base64
+function getFrameBase64() {
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg").split(",")[1]; // Remove prefix
+}
+
+// Send frame to Flask backend
+async function sendFrame() {
+    if (!video.srcObject) return;
+
+    const frame = getFrameBase64();
+    try {
+        const res = await fetch(`${API_BASE_URL}/stream`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ frame })
+        });
+        const data = await res.json();
+        if (data.success) {
+            output.innerText = data.result;
+        } else {
+            console.error(data.message);
+        }
+    } catch (err) {
+        console.error("Error sending frame:", err);
+    }
+}
+
+// Start capturing frames every 3 seconds
+setInterval(sendFrame, 3000);
+
+// Start webcam automatically when page loads
+window.addEventListener('load', startWebcam);
