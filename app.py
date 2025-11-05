@@ -8,7 +8,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Put your OpenAI API key here
-openai.api_key = ""
+openai.api_key = "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"
 
 @app.route("/")
 def home():
