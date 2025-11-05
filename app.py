@@ -1,6 +1,4 @@
-from flask import (Flask, 
-                   render_template, 
-                   request, jsonify)
+from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 import openai
 import base64
@@ -9,12 +7,15 @@ from datetime import datetime
 app = Flask(__name__)
 CORS(app)
 
-# Put API key here
+# Put your OpenAI API key here
 openai.api_key = ""
 
 @app.route("/")
 def home():
     return render_template("index.html")
+
+if __name__ == "__main__":
+    app.run(debug=True, port=8080)
 
 # Define animals for analysis
 
