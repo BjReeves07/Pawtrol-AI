@@ -36,7 +36,8 @@ async function checkConnection() {
             // Update status indicator
             document.getElementById('statusIndicator').className = 'status-indicator online';
             document.getElementById('statusText').textContent = 'Connected to backend';
-            document.getElementById('animalList').textContent = `Animals from API: ${animals.join(', ')}`;
+            const animalNames = animals.map(a => a.name || a.type).join(', ');
+            document.getElementById('animalList').textContent = `Animals from API: ${animalNames}`;
             
             // Update stats
             document.getElementById('totalAnimals').textContent = animals.length;
@@ -48,7 +49,7 @@ async function checkConnection() {
         }
     } catch (error) {
         document.getElementById('statusIndicator').className = 'status-indicator offline';
-        document.getElementById('statusText').textContent = 'Cannot connect to backend. Make sure Spring Boot is running on port 8080.';
+        document.getElementById('statusText').textContent = 'Cannot connect to backend. Make sure Flask is running.';
         document.getElementById('animalList').textContent = '';
         console.error('Connection error:', error);
     }
@@ -68,21 +69,71 @@ function loadAnimals(animals) {
         Goat: '🐐' 
     };
     
-    grid.innerHTML = animals.map(animal => `
-        <div class="animal-card">
-            <div class="animal-icon">${emojis[animal] || '🐾'}</div>
-            <h3>${animal}</h3>
-            <p>Type: ${animal}</p>
-            <p style="color: #999; font-size: 0.9rem;">Last activity: Not monitored yet</p>
-            <button class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" onclick="viewAnimalDetails('${animal}')">
-                View Details
-            </button>
-        </div>
-    `).join('');
+    grid.innerHTML = animals.map(animal => {
+        const name = animal.name || animal;
+        const type = animal.type || animal;
+        const age = animal.age || 'Unknown';
+        const lastActivity = animal.lastActivity || 'Not monitored yet';
+        const id = animal.id || name;
+        
+        return `
+            <div class="animal-card">
+                <div class="animal-icon">${emojis[type] || '🐾'}</div>
+                <h3>${name}</h3>
+                <p>Type: ${type}</p>
+                <p style="color: #999; font-size: 0.9rem;">Age: ${age} years</p>
+                <p style="color: #999; font-size: 0.9rem;">Last activity: ${lastActivity}</p>
+                <button class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" onclick="viewAnimalDetails('${id}')">
+                    View Details
+                </button>
+            </div>
+        `;
+    }).join('');
 }
 
-function viewAnimalDetails(animalName) {
-    alert(`Viewing details for ${animalName}.\n\nBackend team: Implement GET /animals/{id} endpoint to fetch full animal details.`);
+async function viewAnimalDetails(animalId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/animals/${animalId}`);
+        if (response.ok) {
+            const animal = await response.json();
+            const emojis = { Dog: '🐕', Cat: '🐈', Bird: '🐦', Goat: '🐐' };
+            alert(`${emojis[animal.type] || '🐾'} ${animal.name}\n\nType: ${animal.type}\nAge: ${animal.age} years\nLast Activity: ${animal.lastActivity}\n\nID: ${animal.id}`);
+        } else {
+            alert('Could not load animal details.');
+        }
+    } catch (error) {
+        console.error('Error fetching animal details:', error);
+        alert('Error loading animal details.');
+    }
+}
+
+async function addNewAnimal() {
+    const name = prompt('Enter animal name:');
+    if (!name) return;
+    
+    const type = prompt('Enter animal type (Dog, Cat, Bird, Goat):');
+    if (!type) return;
+    
+    const age = prompt('Enter animal age (in years):');
+    if (!age) return;
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/animals`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, type, age: parseInt(age) })
+        });
+        
+        if (response.ok) {
+            alert(`${name} has been added successfully!`);
+            checkConnection();
+        } else {
+            alert('Failed to add animal.');
+        }
+    } catch (error) {
+        console.error('Error adding animal:', error);
+        alert('Error adding animal.');
+    }
 }
 
 // ====================================
@@ -147,12 +198,7 @@ analyzeBtn.addEventListener('click', async () => {
     document.getElementById('analysisResult').innerHTML = '';
     analyzeBtn.disabled = true;
     
-    // TODO: Replace this with actual API call to your backend
-    // This is a placeholder that simulates the API response
-    
     try {
-        // When backend is ready, use this code:
-        /*
         const formData = new FormData();
         formData.append('file', fileInput.files[0]);
         
@@ -161,27 +207,11 @@ analyzeBtn.addEventListener('click', async () => {
             body: formData
         });
         
+        uploadSpinner.classList.remove('show');
+        analyzeBtn.disabled = false;
+        
         const result = await response.json();
         displayAnalysisResult(result);
-        */
-        
-        // Simulation for now:
-        setTimeout(() => {
-            uploadSpinner.classList.remove('show');
-            analyzeBtn.disabled = false;
-            
-            // Simulated result
-            const simulatedResult = {
-                success: true,
-                behavior: 'Dog is pacing',
-                duration: '30 seconds',
-                confidence: 0.95,
-                timestamp: new Date().toISOString(),
-                details: 'Detected restless behavior. Animal appears to be moving back and forth repeatedly.'
-            };
-            
-            displayAnalysisResult(simulatedResult);
-        }, 2000);
         
     } catch (error) {
         uploadSpinner.classList.remove('show');
@@ -216,13 +246,10 @@ function displayAnalysisResult(result) {
             </div>
         `;
         
-        // Add to behavior log
-        addBehaviorLog(result);
+        // Add to behavior log with counter updates
+        addBehaviorLog(result, true);
         
-        // Update stats
-        const currentCount = parseInt(document.getElementById('behaviorsToday').textContent);
-        document.getElementById('behaviorsToday').textContent = currentCount + 1;
-        
+        // Update images analyzed counter
         const imagesCount = parseInt(document.getElementById('imagesAnalyzed').textContent);
         document.getElementById('imagesAnalyzed').textContent = imagesCount + 1;
     } else {
@@ -241,8 +268,15 @@ function displayAnalysisResult(result) {
 // BEHAVIOR LOGS
 // ====================================
 
-function addBehaviorLog(behaviorData) {
+const displayedLogIds = new Set();
+
+function addBehaviorLog(behaviorData, updateCounters = false) {
     const logContainer = document.getElementById('logContainer');
+    
+    // Skip if already displayed
+    if (behaviorData.id && displayedLogIds.has(behaviorData.id)) {
+        return;
+    }
     
     // Create log entry
     const logEntry = document.createElement('div');
@@ -264,8 +298,19 @@ function addBehaviorLog(behaviorData) {
     // Add new log at the top
     logContainer.insertBefore(logEntry, logContainer.firstChild);
     
+    // Mark as displayed
+    if (behaviorData.id) {
+        displayedLogIds.add(behaviorData.id);
+    }
+    
     // Update recent activity on dashboard
     updateRecentActivity(behaviorData);
+    
+    // Only update counters for new behaviors (not historical loads)
+    if (updateCounters) {
+        const currentCount = parseInt(document.getElementById('behaviorsToday').textContent);
+        document.getElementById('behaviorsToday').textContent = currentCount + 1;
+    }
 }
 
 function updateRecentActivity(behaviorData) {
@@ -285,7 +330,7 @@ async function loadBehaviorLogs() {
         const response = await fetch(`${API_BASE_URL}/behaviors`);
         if (response.ok) {
             const logs = await response.json();
-            logs.forEach(log => addBehaviorLog(log));
+            logs.forEach(log => addBehaviorLog(log, false));
         }
     } catch (error) {
         console.error('Failed to load behavior logs:', error);
@@ -339,6 +384,40 @@ async function loadAlerts() {
 }
 
 // ====================================
+// CAMERA CONFIGURATION
+// ====================================
+
+async function configureCamera(cameraId) {
+    const name = prompt(`Enter name for Camera ${cameraId}:`, `Camera ${cameraId}`);
+    if (!name) return;
+    
+    const frameRate = prompt('Enter frame capture rate (seconds):', '3');
+    if (!frameRate) return;
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/camera/configure`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                cameraId: cameraId,
+                name: name,
+                enabled: true,
+                frameRate: parseInt(frameRate)
+            })
+        });
+        
+        if (response.ok) {
+            alert(`Camera ${cameraId} configured successfully!\nName: ${name}\nFrame Rate: Every ${frameRate} seconds`);
+        } else {
+            alert('Failed to configure camera.');
+        }
+    } catch (error) {
+        console.error('Error configuring camera:', error);
+        alert('Error configuring camera.');
+    }
+}
+
+// ====================================
 // INITIALIZATION
 // ====================================
 
@@ -349,11 +428,13 @@ window.addEventListener('load', () => {
     // Refresh connection status every 30 seconds
     setInterval(checkConnection, 30000);
     
-    // Load additional data (when backend endpoints are ready)
-    // Uncomment these when backend is implemented:
-    // loadBehaviorLogs();
-    // loadDailySummary();
-    // loadAlerts();
+    // Load additional data
+    loadBehaviorLogs();
+    loadDailySummary();
+    loadAlerts();
+    
+    // Refresh behaviors every 10 seconds
+    setInterval(loadBehaviorLogs, 10000);
 });
 
 // ====================================

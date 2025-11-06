@@ -67,7 +67,7 @@
         <!-- Animals View -->
         <div id="animals" class="view">
             <h2>Animal Management</h2>
-            <button class="btn btn-primary" style="margin: 1rem 0;">+ Add New Animal</button>
+            <button class="btn btn-primary" style="margin: 1rem 0;" onclick="addNewAnimal()">+ Add New Animal</button>
             <div class="animal-grid" id="animalGrid">
                 <!-- Animals will be loaded here dynamically -->
             </div>
@@ -88,7 +88,7 @@
         <!-- Where AI result will appear -->
         <p id="output">Waiting for analysis...</p>
 
-                    <button class="btn btn-primary" style="margin-top: 1rem; width: 100%;">Configure Camera</button>
+                    <button class="btn btn-primary" style="margin-top: 1rem; width: 100%;" onclick="configureCamera('camera1')">Configure Camera</button>
                 </div>
                 <div class="camera-feed">
                     <h3>Camera 2</h3>
@@ -98,7 +98,7 @@
                         </svg>
                         <p>Camera Feed - OpenCV Integration</p>
                     </div>
-                    <button class="btn btn-primary" style="margin-top: 1rem; width: 100%;">Configure Camera</button>
+                    <button class="btn btn-primary" style="margin-top: 1rem; width: 100%;" onclick="configureCamera('camera2')">Configure Camera</button>
                 </div>
             </div>
             <div class="summary-card" style="margin-top: 2rem;">
