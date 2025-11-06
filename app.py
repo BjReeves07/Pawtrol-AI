@@ -3,19 +3,17 @@ from flask_cors import CORS
 import openai
 import base64
 from datetime import datetime
+import os
 
 app = Flask(__name__)
 CORS(app)
 
-# Put your OpenAI API key here
-openai.api_key = "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"
+openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 @app.route("/")
 def home():
-    return render_template("index.html")
-
-if __name__ == "__main__":
-    app.run(debug=True, port=8080)
+    response = render_template("index.html")
+    return response, 200, {'Cache-Control': 'no-cache, no-store, must-revalidate'}
 
 # Define animals for analysis
 
@@ -137,4 +135,4 @@ def analyze_stream():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=8080)
+    app.run(host="0.0.0.0", port=5000, debug=True)

@@ -2,8 +2,8 @@
 // PAWTROL AI - FRONTEND JAVASCRIPT
 // ====================================
 
-// API Configuration
-const API_BASE_URL = 'http://localhost:8080';
+// API Configuration - Use relative URL for same origin
+const API_BASE_URL = window.location.origin;
 
 // ====================================
 // NAVIGATION
